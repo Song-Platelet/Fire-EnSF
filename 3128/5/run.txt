@@ -1,0 +1,1 @@
+/home/hshi301/3128/3128.lcp /home/hshi301/3128/5/para.input /home/hshi301/3128/4/out/output.shp 0 /home/hshi301/3128/5/out/output 0
