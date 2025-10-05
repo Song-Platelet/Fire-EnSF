@@ -23,21 +23,18 @@ plt.rcParams['legend.fontsize'] = 12 # Font size for legend
 
 cond_alpha = lambda t: 1 - (1-eps_alpha)*t
 
-# conditional sigma^2
-# sigma2_t(0) = 0
-# sigma2_t(1) = 1
-# sigma(t) = t
-cond_sigma_sq = lambda t: eps_beta + t * (1 - eps_beta)
+# conditional beta^2
+cond_beta_sq = lambda t: eps_beta + t * (1 - eps_beta)
 
 # drift function of forward SDE
 f = lambda t: -(1-eps_alpha) / cond_alpha(t)
 # diffusion function of forward SDE
-g_sq = lambda t: 1 - 2 * f(t) * cond_sigma_sq(t)
+g_sq = lambda t: 1 - 2 * f(t) * cond_beta_sq(t)
 g = lambda t: np.sqrt(g_sq(t))
 
 # generate sample with reverse SDE
 def reverse_SDE(x0, score_likelihood=None, time_steps=100,
-                drift_fun=f, diffuse_fun=g, alpha_fun=cond_alpha, sigma2_fun=cond_sigma_sq,  save_path=False):
+                drift_fun=f, diffuse_fun=g, alpha_fun=cond_alpha, beta2_fun=cond_beta_sq,  save_path=False):
     # x_T: sample from standard Gaussian
     # x_0: target distribution to sample from
 
@@ -62,7 +59,7 @@ def reverse_SDE(x0, score_likelihood=None, time_steps=100,
     for i in range(time_steps):
         # prior score evaluation
         alpha_t = alpha_fun(t)
-        sigma2_t = sigma2_fun(t)
+        beta2_t = beta2_fun(t)
 
         # Evaluate the diffusion term
         diffuse = diffuse_fun(t)
@@ -72,10 +69,10 @@ def reverse_SDE(x0, score_likelihood=None, time_steps=100,
 
         # Update
         if score_likelihood is not None:
-            xt += - dt*( drift_fun(t)*xt + diffuse**2 * ( (xt - alpha_t*x0)/sigma2_t) - diffuse**2 * score_likelihood(xt, t) ) \
+            xt += - dt*( drift_fun(t)*xt + diffuse**2 * ( (xt - alpha_t*x0)/beta2_t) - diffuse**2 * score_likelihood(xt, t) ) \
                   + np.sqrt(dt)*diffuse*torch.randn_like(xt)
         else:
-            xt += - dt*( drift_fun(t)*xt + diffuse**2 * ( (xt - alpha_t*x0)/sigma2_t) ) + np.sqrt(dt)*diffuse*torch.randn_like(xt)
+            xt += - dt*( drift_fun(t)*xt + diffuse**2 * ( (xt - alpha_t*x0)/beta2_t) ) + np.sqrt(dt)*diffuse*torch.randn_like(xt)
 
         # Store the state in the path
         if save_path:
