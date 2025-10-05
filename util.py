@@ -214,6 +214,17 @@ def compute_rmse(array1, array2):
     return np.sqrt(np.mean(distances**2))
 
 def convert_WGS84(gdf, fireid, period):
+    """
+    Convert the project of shape to Geographic Coordinate System (longtitude and latitude).
+    
+    Parameters:
+    gdf (geopandas.GeoDataFrame): First array of shape (n, 2).
+    fireid (int): The id of fire.
+    period (int): Current period.
+    
+    Returns:
+    geopandas.GeoDataFrame: the polygon in GCS projection.
+    """
     with open(rf'{fireid}/{period}/fire_boundary.prj', 'r') as f:
         prj_wkt = f.readline()
     gdf = gdf.set_crs(prj_wkt, allow_override=True)
