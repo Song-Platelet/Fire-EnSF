@@ -87,19 +87,21 @@ def reverse_SDE(x0, score_likelihood=None, time_steps=100,
     else:
         return xt
 
-# the simple dynamic system
+# Simple dynamic system
 forward_drift = lambda x: 2*x 
 
+# number of trials
 trial = 30
 
+# Time record for each method
 time_dict = {
     'ensf': np.zeros(trial),
     'enkf': np.zeros(trial)
 }
 
 for k in range(trial):
-    # lorenz system
-    n_dim = 2000
+    # System step
+    n_dim = 2000 
     SDE_sigma = 0.5
 
     # filtering setup
@@ -111,16 +113,16 @@ for k in range(trial):
 
     ####################################################################
     # EnSF setup
-    # define the diffusion process
+    # define the diffusion process (fine-Tuned)
     eps_alpha = 0.96
-    eps_beta = 0.04
+    eps_beta = 0.03
     # ensemble size
     ensemble_size = 100
 
     # forward Euler step
     euler_steps = 100
 
-    # damping function(tau(0) = 1;  tau(1) = 0;)
+    # damping function
     g_tau = lambda t: 1-t
 
     # computation setting
@@ -135,18 +137,16 @@ for k in range(trial):
     y = 1.00 * np.sin(angles)
     state_target = torch.tensor(np.vstack((x, y)).T.flatten(), device=device)
 
-    # filtering initial ensemble
-    # x_state = state_target + torch.randn(ensemble_size, n_dim, device=device)*0.5
-    # x_state = torch.randn(ensemble_size, n_dim, device=device)  # pure Gaussian initial
+    # Initial setup
     x = 1.15 * np.cos(angles)
     y = 1.05 * np.sin(angles)
-    x_prop = torch.tensor(np.vstack((x, y)).T.flatten(), device=device) # Initial set up
-
-    x_state = x_prop.repeat(ensemble_size, 1) + 0.1 * torch.randn(ensemble_size, n_dim, device=device)
+    x_prop = torch.tensor(np.vstack((x, y)).T.flatten(), device=device) # use for forecasting w/o DA method
+    x_state = x_prop.repeat(ensemble_size, 1) + 0.1 * torch.randn(ensemble_size, n_dim, device=device) # ground truth
 
     torch.manual_seed(114514)
     torch.cuda.empty_cache()
 
+    # time record
     t = 0
 
     # info containers
@@ -161,9 +161,11 @@ for k in range(trial):
 
     # filtering cycles
     for i in range(filtering_steps):
-        time1 = time()
-
         x_prop += dt*forward_drift(x_prop)
+      
+        # record the total time of the process of predict and update step
+        time1 = time()
+        
         # prediction step ############################################
         # state forward in time
         x_state += dt*forward_drift(x_state) + np.sqrt(dt)*SDE_sigma*torch.randn_like(x_state)
@@ -177,13 +179,11 @@ for k in range(trial):
         obs = 0.25 * state_target + torch.randn_like(state_target) * obs_sigma
 
         # define likelihood score
-        # obs: (d)
-        # xt: (ensemble, d)
-        # score_likelihood = lambda xt, t: -(torch.atan(xt) - obs)/obs_sigma**2 * (1./(1. + xt**2)) * g_tau(t)
         score_likelihood = lambda xt, t: -(0.25*xt - obs) / obs_sigma**2 * g_tau(t) * 0.25
 
         # generate posterior sample
         x_state = reverse_SDE(x0=x_state, score_likelihood=score_likelihood, time_steps=euler_steps)
+      
         # get state estimates
         x_est = torch.mean(x_state, dim=0)
 
@@ -218,116 +218,22 @@ for k in range(trial):
 
     time_dict['ensf'][k] = t
 
-    columns =[1] + [i for i in range(30) if i % 10 == 9]
-    num_plot_a_cols = len(columns)
 
-    if k == 0:
-        # Create the subplots
-        fig_a, axs_a = plt.subplots(nrows=3, ncols=num_plot_a_cols,
-                                    figsize=(13, 8),
-                                    sharey='row', sharex='col')
 
-        # Define colors
-        color_gt_ref = 'dodgerblue'     # Blue
-        color_state_true = '#e66060' # Green
-        color_x_est = '#6be64d'      # Orange
-
-        # Define marker properties for scatter plots
-        marker_size_scatter = 50  # 's' parameter for plt.scatter
-        marker_alpha = 0.75
-
-        # --- Create proxy artists for the figure-level legend ---
-        legend_marker_size_line2d = 8
-
-        gt_proxy = mlines.Line2D([], [], color=color_gt_ref, marker='o', linestyle='None',
-                                markersize=legend_marker_size_line2d, label='Ground Truth',
-                                markeredgecolor='k', markeredgewidth=0.5)
-        obs_proxy = mlines.Line2D([], [], color=color_state_true, marker='^', linestyle='None',
-                                markersize=legend_marker_size_line2d, label='Observation',
-                                markeredgecolor='k', markeredgewidth=0.5)
-        est_proxy = mlines.Line2D([], [], color=color_x_est, marker='s', linestyle='None',
-                                markersize=legend_marker_size_line2d, label='Estimated State',
-                                markeredgecolor='k', markeredgewidth=0.5)
-
-        handles_for_legend = [gt_proxy, obs_proxy, est_proxy]
-
-        for col_idx, step_num in enumerate(columns):
-            # Ensure n_dim is an even number for reshaping
-            if n_dim % 2 != 0:
-                raise ValueError("n_dim must be an even number for reshaping into (y,x) pairs.")
-
-            # Reshape data for plotting (assuming (y, x) pairs)
-            # Ensure data is correctly indexed if it's a list of arrays
-            current_state_data = state_save[step_num]
-            current_obs_data = obs_save[step_num]
-            current_est_data = est_save[step_num]
-
-            gt_ref_plot_x = current_state_data.reshape((int(n_dim / 2), 2))[:, 0]
-            gt_ref_plot_y = current_state_data.reshape((int(n_dim / 2), 2))[:, 1]
-
-            st_true_plot_x = current_obs_data.reshape((int(n_dim / 2), 2))[:, 0]
-            st_true_plot_y = current_obs_data.reshape((int(n_dim / 2), 2))[:, 1]
-
-            x_est_plot_x = current_est_data.reshape((int(n_dim / 2), 2))[:, 0]
-            x_est_plot_y = current_est_data.reshape((int(n_dim / 2), 2))[:, 1]
-
-            # --- Row 1: Ground truth_ref vs. State target (state_true) ---
-            ax1 = axs_a[0, col_idx] if num_plot_a_cols > 1 else axs_a[0]
-            ax1.scatter(gt_ref_plot_x, gt_ref_plot_y, alpha=marker_alpha, color=color_gt_ref, s=marker_size_scatter, edgecolor='k', linewidth=0.5)
-            ax1.scatter(st_true_plot_x, st_true_plot_y, alpha=marker_alpha, color=color_state_true, s=marker_size_scatter, marker='^', edgecolor='k', linewidth=0.5)
-            ax1.set_title(f'Filtering Step {step_num+1}', fontsize=20, fontweight='medium')
-            if step_num == 1:
-                ax1.set_ylabel('Y-coordinate', fontsize=20)
-            ax1.grid(False)
-
-            # --- Row 2: State target (state_true) vs. Estimated state (x_est) ---
-            ax2 = axs_a[1, col_idx] if num_plot_a_cols > 1 else axs_a[1]
-            ax2.scatter(st_true_plot_x, st_true_plot_y, alpha=marker_alpha, color=color_state_true, s=marker_size_scatter, marker='^', edgecolor='k', linewidth=0.5)
-            ax2.scatter(x_est_plot_x, x_est_plot_y, alpha=marker_alpha, color=color_x_est, s=marker_size_scatter, marker='s', edgecolor='k', linewidth=0.5)
-            if step_num == 1:
-                ax2.set_ylabel('Y-coordinate', fontsize=20)
-            ax2.grid(False)
-
-            # --- Row 3: Ground truth_ref vs. x_est ---
-            ax3 = axs_a[2, col_idx] if num_plot_a_cols > 1 else axs_a[2]
-            ax3.scatter(gt_ref_plot_x, gt_ref_plot_y, alpha=marker_alpha, color=color_gt_ref, s=marker_size_scatter, edgecolor='k', linewidth=0.5)
-            ax3.scatter(x_est_plot_x, x_est_plot_y, alpha=marker_alpha, color=color_x_est, s=marker_size_scatter, marker='s', edgecolor='k', linewidth=0.5)
-            ax3.set_xlabel('X-coordinate', fontsize=18)
-            if step_num == 1:
-                ax3.set_ylabel('Y-coordinate', fontsize=20)
-            ax3.grid(False)
-
-            # Improve tick label appearance
-            for ax_row in range(3):
-                current_ax = axs_a[ax_row, col_idx] if num_plot_a_cols > 1 else axs_a[ax_row]
-                current_ax.tick_params(axis='both', which='major', labelsize=18)
-
-        # --- Adjust layout and add the figure-level legend ---
-        plt.tight_layout(rect=[0.03, 0.03, 0.97, 0.94])
-        fig_a.subplots_adjust(right=0.82)
-        fig_a.legend(handles=handles_for_legend,
-                    fontsize=20,
-                    loc='center left',
-                    bbox_to_anchor=(0.83, 0.5),
-                    borderaxespad=0.)
-
-        # Save the figure (optional)
-        plt.savefig("num_result/num_ensf.pdf", bbox_inches='tight')
-        plt.close()
-
+    ####################################################################
+    # EnKF setup
     # Initialize ensemble
     x = 1.00 * np.cos(angles)
     y = 1.00 * np.sin(angles)
     state_target = torch.tensor(np.vstack((x, y)).T.flatten(), device=device)
 
+    # Initial setup
     x_init_coords = 1.15 * np.cos(angles) # Changed variable name for clarity
     y_init_coords = 1.05 * np.sin(angles) # Changed variable name for clarity
-    x_prop = torch.tensor(np.vstack((x_init_coords, y_init_coords)).T.flatten(), device=device) # Initial set up
+    x_prop = torch.tensor(np.vstack((x_init_coords, y_init_coords)).T.flatten(), device=device)
     x_state = x_prop.repeat(ensemble_size, 1) + 0.1 * torch.randn(ensemble_size, n_dim, device=device)
 
-    H = 0.25 * torch.eye(n_dim, device=device)
-
-    # Information containers
+    # Information containers for EnKF
     rmse_kf = [compute_rmse(state_target.reshape(-1,2).cpu().numpy(), x_prop.reshape(-1,2).cpu().numpy())]
     est_save = [] # This seems to store the same as state_save, consider if both are needed
 
