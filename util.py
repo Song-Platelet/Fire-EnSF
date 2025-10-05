@@ -29,7 +29,14 @@ import geopandas as gpd
 from shapely.ops import unary_union, polygonize
 from shapely.geometry import box, shape, Point, Polygon, MultiPoint, MultiPolygon, LineString, MultiLineString
 
-def farsite(instr_file, exe_path=r"/home/hshi301/src/TestFARSITE"):
+def farsite(instr_file, exe_path=r"./src/TestFARSITE"):
+    """
+    Run FARSITE with input files.
+    
+    Args:
+        instr_file (str): Instruction of input for FARSITE to operate
+        exe_path (str, optional): Path to FARSITE executable. Uses default if None.
+    """
     start = time()
     result = subprocess.run(
         [exe_path, instr_file],
@@ -81,13 +88,25 @@ def create_folder(folder_path):
         print(f"Error creating folder '{folder_path}': {error}")
 
 def farsite_ins(landscape, input, ig, output_loc):
+    """
+    Creates a instruction file for FARSITE to run
+
+    Args:
+        landscape (str): landscape file location
+        input (str): location of .input file
+        ig (str): location of initial fire boundry file
+        output_loc (str): the folder for FARSITE to save the output
+    
+    Returns:
+        The location of instruction file
+    """
     create_folder(output_loc)
     output_loc = output_loc + '/output'
-    template = rf"/home/hshi301/{landscape} /home/hshi301/{input} /home/hshi301/{ig} 0 /home/hshi301/{output_loc} 0"
+    template = rf"{os.path.abspath(landscape)} {os.path.abspath(input)} {os.path.abspath(ig)} 0 {os.path.abspath(output_loc)} 0"
 
     with open(output_loc[:-10] + 'run.txt', 'w') as f:
         f.write(template)
-    return rf"/home/hshi301/{output_loc[:-10]}run.txt"
+    return os.path.abspath(rf"{output_loc[:-10]}run.txt")
 
 def order_polygon_vertices_convex(points):
     """
