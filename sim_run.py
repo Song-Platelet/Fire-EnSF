@@ -12,7 +12,6 @@ import matplotlib.lines as mlines
 
 # Apply a style for better aesthetics
 plt.style.use('seaborn-v0_8-whitegrid')
-# Font settings (Consider using LaTeX for text rendering if your paper uses LaTeX)
 plt.rcParams['font.size'] = 12  # Base font size
 plt.rcParams['axes.labelsize'] = 14 # Font size for x and y labels
 plt.rcParams['axes.titlesize'] = 16 # Font size for the title
@@ -20,7 +19,7 @@ plt.rcParams['xtick.labelsize'] = 12 # Font size for x-axis tick labels
 plt.rcParams['ytick.labelsize'] = 12 # Font size for y-axis tick labels
 plt.rcParams['legend.fontsize'] = 12 # Font size for legend
 
-
+# conditional alpha^2
 cond_alpha = lambda t: 1 - (1-eps_alpha)*t
 
 # conditional beta^2
