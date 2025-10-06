@@ -216,9 +216,6 @@ for k in range(trial):
     est_save = torch.stack(est_save, dim=0).cpu().numpy()
 
     time_dict['ensf'][k] = t
-
-
-
     ####################################################################
     # EnKF setup
     # Initialize ensemble
@@ -330,7 +327,7 @@ ax.spines['bottom'].set_color('black')
 
 # Adjust layout to prevent labels from being cut off
 plt.tight_layout()
-plt.savefig("num_result/num_com.pdf", bbox_inches='tight')
+plt.savefig("num_com.pdf", bbox_inches='tight')
 plt.close()
 
 data = pd.DataFrame(time_dict)
