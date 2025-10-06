@@ -90,8 +90,9 @@ def fetch_data(db_name: str, fireid, alpha, beta):
     finally:
         if conn:
             conn.close()
-    
 
+# create database to record rmse of ensf
+# mainly for fine tune and avoid duplicated running the code
 database_file = "ensf_final_rmse.db" # Define your database file name
 create_database_and_table(database_file)
 
