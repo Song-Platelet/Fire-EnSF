@@ -6,7 +6,7 @@ This repository contains the code and data for **Fire-EnSF**, a data assimilatio
  
 ![Fire-EnSF method flowchart](flowchart.jpg)
 
-The diagram above illustrates the overall Fire-EnSF pipeline: fire boundary observations and landscape/weather inputs drive FARSITE's forward fire-spread prediction, whose ensemble output is corrected at each observation period by the EnSF (or EnKF, for comparison) data assimilation step before being fed back into the next forecast cycle.
+The diagram above illustrates the overall Fire-EnSF pipeline: fire boundary observations and landscape/weather inputs drive FARSITE's forward fire-spread prediction, whose ensemble output is corrected at each observation period by the EnSF (data assimilation step) before being fed back into the next forecast cycle.
 
 ## Repository and Dataset Access
  
