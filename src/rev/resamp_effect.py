@@ -113,13 +113,13 @@ resamp.to_file(r'rev/resamp.shp')
 def farsite_ins(landscape, input, ig, output_loc):
     create_folder(output_loc)
     output_loc = output_loc + '/output'
-    template = rf"./{landscape} ./{input} ./{ig} 0 ./{output_loc} 0"
+    template = rf"/home/hshi301/{landscape} /home/hshi301/{input} /home/hshi301/{ig} 0 /home/hshi301/{output_loc} 0"
 
     run_loc = 'rev/run.txt'
 
     with open(run_loc, 'w') as f:
         f.write(template)
-    return rf"./{run_loc}"
+    return rf"/home/hshi301/{run_loc}"
 
 poly_list = []
 
