@@ -1,6 +1,6 @@
 # Fire-EnSF: Wildfire Spread Data Assimilation using Ensemble Score Filter
  
-This repository contains the code and data for **Fire-EnSF**, a data assimilation framework that couples the **FARSITE** fire behavior model with the **Ensemble Score Filter (EnSF)** and **Ensemble Kalman Filter (EnKF)** to forecast wildfire spread.
+This repository contains the code and data for **Fire-EnSF**, a data assimilation framework that couples the **FARSITE** fire behavior model with the **Ensemble Score Filter (EnSF)** to forecast wildfire spread.
  
 ## Method Overview
  
