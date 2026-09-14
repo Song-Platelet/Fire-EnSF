@@ -33,10 +33,10 @@ This project uses the C/C++ version of FARSITE. FARSITE is integrated with the E
 ```
    to produce `TestFARSITE.exe`.
  
-> **Performance tip:** 
+> **Tip:** 
 > 1. FARSITE's primary purpose is fire behavior modeling, so boundary forecasting is only one of many outputs it generates. Most of its execution time goes toward writing output files. We recommend disabling all output generation except the forecasted fire boundary to save computation time — this is already implemented in the Windows version included here. 
-> 2. Make sure to brought up the required file of TestFARSITE as you run the CLI command.
-> 3. We have successfully forgotten the detail of how we revised, so please don't ask help about this :)
+> 2. Make sure to attach the required files of TestFARSITE when you run the CLI command.
+> 3. Since we have successfully forgotten the details of how we revised the Windows version from the Linux version, we can't give direct help about this :)
 
 
 ## Data Processing
@@ -52,7 +52,7 @@ This project uses the C/C++ version of FARSITE. FARSITE is integrated with the E
 |---|---|---|
 | `osgeo` fails to install | Linux | Use Windows instead — `data_process.ipynb` was only run successfully on Windows. |
 | `fiona` incompatible with latest `GeoPandas` when reading `.shp` files | Linux | Pass `engine='pyogrio'` to `geopandas.read_file()`. |
-> We recommand to prepare two environments. One of them is for the pre-process work, such as collecting the data; the other one is for running the model.
+> We recommend preparing two environments. One is for preprocessing, such as collecting the data; the other is for running the model.
 
 ## Code Structure
  
@@ -85,13 +85,20 @@ This project uses the C/C++ version of FARSITE. FARSITE is integrated with the E
   - Fire perimeter comparison plots
   Fine-tuning and perimeter plots are fire-specific and saved under their corresponding fire ID folders.
 - **`resamp_effect.py`** — tests how the re-interpolation algorithm affects FARSITE's shape growth, using the Sørensen–Dice Coefficient (SDC) on covered area:
-$$SDC = 2 \frac{A_{or}}{(A_o \times A_r)}$$
+  
+ $$SDC = 2 \frac{A_{or}}{(A_o \times A_r)}$$
+ 
   where $A_o$ and $A_r$ are the areas covered by the original and re-interpolated polygons, and $A_{or}$ is the area of their intersection.
 
 - **`uq_plt.ipynb`** — visualizes:
   - Sensitivity analysis of filter performance across the $ε_α$ and $ε_β$ parameters on the EnSF-generated ensemble.
   - Uncertainty quantification and ensemble behavior of Fire-EnSF vs. FARSITE-with-EnKF for total fire area (km²) across multiple fire IDs and observation periods.
 - **`scd_plt.py`** — generates the comparison of observed vs. estimated Sørensen–Dice Coefficients on total burned area, across multiple filtering times and methods.
+## Additional Resource
+- [A high spatial resolution daily fire perimeter progression](https://data.mendeley.com/datasets/95rj5d379g/1): can be directly downloaded.
+- [Country-level fire perimeter datasets (2001–2021)](https://github.com/earthlab/firedpy): The fire perimeter in on the README.md.
+
+
 ## Citation
  
 If you find this work helpful, please cite:
